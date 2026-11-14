@@ -14,6 +14,7 @@ Rectangle {
     required property string status
     required property string message
     required property string platform
+    required property string details
 
     property bool confirmingRemove: false
 
@@ -103,6 +104,12 @@ Rectangle {
             elide: Text.ElideRight
             Layout.fillWidth: true
             Layout.leftMargin: 64
+
+            // What ffmpeg actually said, for when the sentence above is not enough.
+            HoverHandler { id: statusHover }
+            ToolTip.visible: statusHover.hovered && row.details !== ""
+            ToolTip.delay: 300
+            ToolTip.text: row.details
         }
     }
 }

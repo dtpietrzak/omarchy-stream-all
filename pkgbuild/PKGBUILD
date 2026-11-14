@@ -5,7 +5,7 @@
 # pkgdesc, and depends the same in both.
 pkgname=stream-all
 pkgver=0.1.0
-pkgrel=3
+pkgrel=4
 pkgdesc='Send one OBS stream to YouTube, Twitch, and any other RTMP destination'
 arch=('x86_64' 'aarch64')
 url='https://github.com/dtpietrzak/omarchy-stream-all'

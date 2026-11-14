@@ -32,5 +32,10 @@
   "ffmpeg was not found. Install it with: omarchy-pkg-add ffmpeg": "No se encontró ffmpeg. Instálalo con: omarchy-pkg-add ffmpeg",
   "secret-tool was not found. Install libsecret so stream keys can be stored encrypted.": "No se encontró secret-tool. Instala libsecret para guardar las claves de transmisión cifradas.",
   "The keyring is not available, so stream keys cannot be saved. Unlock it or start gnome-keyring.": "El llavero no está disponible, así que no se pueden guardar las claves de transmisión. Desbloquéalo o inicia gnome-keyring.",
-  "The keyring is not available, so stream keys cannot be read. Unlock it or start gnome-keyring.": "El llavero no está disponible, así que no se pueden leer las claves de transmisión. Desbloquéalo o inicia gnome-keyring."
+  "The keyring is not available, so stream keys cannot be read. Unlock it or start gnome-keyring.": "El llavero no está disponible, así que no se pueden leer las claves de transmisión. Desbloquéalo o inicia gnome-keyring.",
+  "Can't find the server %1. Check the address and your connection.": "No se encuentra el servidor %1. Revisa la dirección y tu conexión.",
+  "The server refused the connection. Check the address and the port.": "El servidor rechazó la conexión. Revisa la dirección y el puerto.",
+  "The server did not answer. Check the address and your connection.": "El servidor no respondió. Revisa la dirección y tu conexión.",
+  "The secure connection (rtmps://) failed. Check the address, or try rtmp://.": "Falló la conexión segura (rtmps://). Revisa la dirección o prueba con rtmp://.",
+  "The platform closed the connection. Check the stream key, and that the stream is ready on the platform.": "La plataforma cerró la conexión. Revisa la clave de transmisión y que la transmisión esté lista en la plataforma."
 }

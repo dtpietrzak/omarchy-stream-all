@@ -126,6 +126,53 @@ private slots:
         QVERIFY(QDir(dir.filePath("secrets")).entryList(QDir::Files).isEmpty());
     }
 
+    void explainsWhyAnOutputFailed()
+    {
+        // ffmpeg's own last lines say only "Error opening output file"; the
+        // reason is above them.
+        QVERIFY(Backend::explainFailure({"Failed to resolve hostname live.exmaple.tv: Name or service not known",
+                                         "Error opening output file rtmp://live.exmaple.tv/app/***."})
+                    .contains("live.exmaple.tv"));
+        QVERIFY(Backend::explainFailure({"Connection to tcp://127.0.0.1:1999 failed: Connection refused",
+                                         "Error opening output files: Connection refused"})
+                    .contains("refused"));
+        QVERIFY(Backend::explainFailure({"Error opening output rtmp://a/b/***: Input/output error"})
+                    .contains("stream key"));
+        QCOMPARE(Backend::explainFailure({"Something nobody has seen before"}), QString("Something nobody has seen before"));
+        QVERIFY(Backend::explainFailure({}).isEmpty());
+    }
+
+    void showsTheExplanationAndKeepsTheDetailsWithoutTheKey()
+    {
+        QTemporaryDir dir;
+        const QString fake = dir.filePath("ffmpeg");
+        write(fake, "#!/bin/sh\n"
+                    "case \"$*\" in\n"
+                    "  *-listen*) while true; do printf 'x'; sleep 0.1; done ;;\n"
+                    "  *) echo '[tcp @ 0x1] Failed to resolve hostname nowhere.invalid: nope' >&2\n"
+                    "     echo '[out#0/flv @ 0x2] Error opening output rtmp://nowhere.invalid/live/topsecret99: x' >&2\n"
+                    "     exit 1 ;;\n"
+                    "esac\n");
+        QFile::setPermissions(fake, QFile::ReadOwner | QFile::WriteOwner | QFile::ExeOwner);
+
+        Backend backend(dir.filePath("outputs.json"), fake, secrets(dir));
+        backend.setServer(0, "rtmp://nowhere.invalid/live");
+        backend.setStreamKey(0, "topsecret99");
+        backend.setListening(true);
+        const QModelIndex row = backend.index(0);
+        QTRY_COMPARE_WITH_TIMEOUT(backend.data(row, Backend::StatusRole).toString(), QString("error"), 4000);
+        QVERIFY(backend.data(row, Backend::MessageRole).toString().contains("nowhere.invalid"));
+        const QString details = backend.data(row, Backend::DetailsRole).toString();
+        QVERIFY(details.contains("Failed to resolve hostname"));
+        QVERIFY(!details.contains("topsecret99"));
+        QVERIFY(!details.contains("[tcp @"));
+
+        // The retry five seconds later must not blank the explanation.
+        QTest::qWait(5600);
+        QCOMPARE(backend.data(row, Backend::StatusRole).toString(), QString("error"));
+        QVERIFY(backend.data(row, Backend::MessageRole).toString().contains("nowhere.invalid"));
+    }
+
     void removesOutputs()
     {
         QTemporaryDir dir;

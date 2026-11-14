@@ -32,5 +32,10 @@
   "ffmpeg was not found. Install it with: omarchy-pkg-add ffmpeg": "ffmpeg est introuvable. Installez-le avec : omarchy-pkg-add ffmpeg",
   "secret-tool was not found. Install libsecret so stream keys can be stored encrypted.": "secret-tool est introuvable. Installez libsecret pour stocker les clés de stream chiffrées.",
   "The keyring is not available, so stream keys cannot be saved. Unlock it or start gnome-keyring.": "Le trousseau n’est pas disponible, les clés de stream ne peuvent donc pas être enregistrées. Déverrouillez-le ou lancez gnome-keyring.",
-  "The keyring is not available, so stream keys cannot be read. Unlock it or start gnome-keyring.": "Le trousseau n’est pas disponible, les clés de stream ne peuvent donc pas être lues. Déverrouillez-le ou lancez gnome-keyring."
+  "The keyring is not available, so stream keys cannot be read. Unlock it or start gnome-keyring.": "Le trousseau n’est pas disponible, les clés de stream ne peuvent donc pas être lues. Déverrouillez-le ou lancez gnome-keyring.",
+  "Can't find the server %1. Check the address and your connection.": "Serveur %1 introuvable. Vérifiez l’adresse et votre connexion.",
+  "The server refused the connection. Check the address and the port.": "Le serveur a refusé la connexion. Vérifiez l’adresse et le port.",
+  "The server did not answer. Check the address and your connection.": "Le serveur ne répond pas. Vérifiez l’adresse et votre connexion.",
+  "The secure connection (rtmps://) failed. Check the address, or try rtmp://.": "La connexion sécurisée (rtmps://) a échoué. Vérifiez l’adresse ou essayez rtmp://.",
+  "The platform closed the connection. Check the stream key, and that the stream is ready on the platform.": "La plateforme a fermé la connexion. Vérifiez la clé de stream et que le stream est prêt sur la plateforme."
 }

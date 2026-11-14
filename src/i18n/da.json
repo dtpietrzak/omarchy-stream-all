@@ -32,5 +32,10 @@
   "ffmpeg was not found. Install it with: omarchy-pkg-add ffmpeg": "ffmpeg blev ikke fundet. Installér det med: omarchy-pkg-add ffmpeg",
   "secret-tool was not found. Install libsecret so stream keys can be stored encrypted.": "secret-tool blev ikke fundet. Installér libsecret, så streamnøgler kan gemmes krypteret.",
   "The keyring is not available, so stream keys cannot be saved. Unlock it or start gnome-keyring.": "Nøgleringen er ikke tilgængelig, så streamnøgler kan ikke gemmes. Lås den op eller start gnome-keyring.",
-  "The keyring is not available, so stream keys cannot be read. Unlock it or start gnome-keyring.": "Nøgleringen er ikke tilgængelig, så streamnøgler kan ikke læses. Lås den op eller start gnome-keyring."
+  "The keyring is not available, so stream keys cannot be read. Unlock it or start gnome-keyring.": "Nøgleringen er ikke tilgængelig, så streamnøgler kan ikke læses. Lås den op eller start gnome-keyring.",
+  "Can't find the server %1. Check the address and your connection.": "Kan ikke finde serveren %1. Tjek adressen og din forbindelse.",
+  "The server refused the connection. Check the address and the port.": "Serveren afviste forbindelsen. Tjek adressen og porten.",
+  "The server did not answer. Check the address and your connection.": "Serveren svarede ikke. Tjek adressen og din forbindelse.",
+  "The secure connection (rtmps://) failed. Check the address, or try rtmp://.": "Den sikre forbindelse (rtmps://) mislykkedes. Tjek adressen, eller prøv rtmp://.",
+  "The platform closed the connection. Check the stream key, and that the stream is ready on the platform.": "Platformen lukkede forbindelsen. Tjek streamnøglen, og at streamen er klar på platformen."
 }

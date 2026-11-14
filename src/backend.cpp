@@ -64,13 +64,15 @@ QVariant Backend::data(const QModelIndex &index, int role) const {
     case StatusRole: return o.status;
     case MessageRole: return o.message;
     case PlatformRole: return platformFor(o.server);
+    case DetailsRole: return o.details;
     }
     return {};
 }
 
 QHash<int, QByteArray> Backend::roleNames() const {
     return {{ServerRole, "server"}, {StreamKeyRole, "streamKey"}, {ActiveRole, "active"},
-            {StatusRole, "status"}, {MessageRole, "message"}, {PlatformRole, "platform"}};
+            {StatusRole, "status"}, {MessageRole, "message"}, {PlatformRole, "platform"},
+            {DetailsRole, "details"}};
 }
 
 QString Backend::ingestUrl() const {
@@ -255,7 +257,9 @@ void Backend::setStatus(int row, const QString &status, const QString &message) 
         return;
     o.status = status;
     o.message = message;
-    emit dataChanged(index(row), index(row), {StatusRole, MessageRole});
+    if (status != "error")
+        o.details.clear();
+    emit dataChanged(index(row), index(row), {StatusRole, MessageRole, DetailsRole});
 }
 
 void Backend::setLive(bool live) {
@@ -438,6 +442,25 @@ void Backend::onIngestFinished() {
         QTimer::singleShot(wasLive ? 300 : 2000, this, &Backend::startIngest);
 }
 
+QString Backend::explainFailure(const QStringList &lines) {
+    const QString all = lines.join('\n');
+    // ffmpeg's last lines are only "Error opening output file"; the reason is
+    // printed just above them, so match on that.
+    const auto host = QRegularExpression("Failed to resolve hostname ([^:\\s]+)").match(all);
+    if (host.hasMatch())
+        return tr("Can't find the server %1. Check the address and your connection.").arg(host.captured(1));
+    if (all.contains("Connection refused"))
+        return tr("The server refused the connection. Check the address and the port.");
+    if (all.contains("timed out") || all.contains("Network is unreachable") || all.contains("No route to host"))
+        return tr("The server did not answer. Check the address and your connection.");
+    if (all.contains("Protocol not found") || all.contains("TLS") || all.contains("SSL"))
+        return tr("The secure connection (rtmps://) failed. Check the address, or try rtmp://.");
+    if (all.contains("Input/output error") || all.contains("Server error") || all.contains("Broken pipe")
+        || all.contains("Connection reset") || all.contains("End of file"))
+        return tr("The platform closed the connection. Check the stream key, and that the stream is ready on the platform.");
+    return lines.isEmpty() ? QString() : lines.last();
+}
+
 // ---- outputs: us to ffmpeg to each destination ----
 
 void Backend::settleOutput(int row) {
@@ -476,12 +499,16 @@ void Backend::startOutput(int row) {
     connect(p, &QProcess::finished, this, [this, p](int code) { onOutputFinished(p, code); });
     connect(p, &QProcess::errorOccurred, this, [this, p](QProcess::ProcessError error) {
         if (error == QProcess::FailedToStart) {
-            p->setProperty("lastError", tr("Could not start ffmpeg"));
+            p->setProperty("errLines", QStringList{tr("Could not start ffmpeg")});
             onOutputFinished(p, -1);
         }
     });
     o.process = p;
-    setStatus(row, "starting");
+    // A retry keeps showing why the last attempt failed, so the explanation
+    // does not vanish for a second and a half out of every six; it goes when
+    // the output goes live, or is edited or switched off.
+    if (o.status != "error")
+        setStatus(row, "starting");
     p->start();
 }
 
@@ -523,8 +550,15 @@ void Backend::onOutputStderr(QProcess *p) {
     for (const QString &line : text.split(QRegularExpression("[\r\n]"), Qt::SkipEmptyParts)) {
         if (line.contains("frame=") || line.contains("size=") || line.contains("time="))
             setStatus(row, "live");
-        else
-            p->setProperty("lastError", redact(line, m_outputs.at(row)));
+        else {
+            // Keep the last few lines without ffmpeg's "[rtmp @ 0x…]" prefix.
+            static const QRegularExpression prefix(R"(^\[[^\]]*@ 0x[0-9a-f]+\]\s*)");
+            QStringList lines = p->property("errLines").toStringList();
+            lines << redact(line, m_outputs.at(row)).remove(prefix);
+            while (lines.size() > 12)
+                lines.removeFirst();
+            p->setProperty("errLines", lines);
+        }
     }
 }
 
@@ -545,8 +579,10 @@ void Backend::onOutputFinished(QProcess *p, int code) {
         startOutput(row);
         return;
     }
-    const QString error = p->property("lastError").toString();
-    setStatus(row, "error", error.isEmpty() ? tr("Stopped unexpectedly (exit code %1)").arg(code) : error);
+    const QStringList lines = p->property("errLines").toStringList();
+    o.details = lines.join('\n');
+    const QString message = explainFailure(lines);
+    setStatus(row, "error", message.isEmpty() ? tr("Stopped unexpectedly (exit code %1)").arg(code) : message);
 
     const QString id = o.id;
     QTimer::singleShot(kRetryMs, this, [this, id] {

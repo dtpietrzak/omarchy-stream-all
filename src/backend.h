@@ -18,7 +18,7 @@ class Backend : public QAbstractListModel {
     Q_PROPERTY(QString keyringError READ keyringError NOTIFY keyringErrorChanged)
 
 public:
-    enum Role { ServerRole = Qt::UserRole + 1, StreamKeyRole, ActiveRole, StatusRole, MessageRole, PlatformRole };
+    enum Role { ServerRole = Qt::UserRole + 1, StreamKeyRole, ActiveRole, StatusRole, MessageRole, PlatformRole, DetailsRole };
 
     explicit Backend(const QString &configFile = {}, const QString &ffmpeg = {}, const QString &secretTool = {},
                      QObject *parent = nullptr);
@@ -45,6 +45,9 @@ public:
 
     static QString platformFor(const QString &server);
     static QString outputUrl(const QString &server, const QString &key);
+    // Turns the lines ffmpeg printed before giving up into a sentence that says
+    // what to check; unknown failures fall back to ffmpeg's own last line.
+    static QString explainFailure(const QStringList &lines);
 
 signals:
     void listeningChanged();
@@ -59,7 +62,7 @@ private:
         // A key read from a config file that still held it in plaintext and
         // has not reached the keyring yet; it stays in the file until it has.
         bool legacyKey = false;
-        QString status = QStringLiteral("empty"), message;
+        QString status = QStringLiteral("empty"), message, details;
         QProcess *process = nullptr;
     };
 
