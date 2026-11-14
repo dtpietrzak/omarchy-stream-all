@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Name=Stream All
+Comment=Send one OBS stream to every platform at once
+Comment[da]=Send én OBS-stream til alle platforme på én gang
+Comment[de]=Sende einen OBS-Stream gleichzeitig an alle Plattformen
+Comment[es]=Envía una transmisión de OBS a todas las plataformas a la vez
+Comment[fr]=Envoyez un flux OBS vers toutes les plateformes à la fois
+Exec=stream-all
+Icon=stream-all
+Terminal=false
+Categories=AudioVideo;Video;
+Keywords=stream;streaming;rtmp;obs;twitch;youtube;multistream;
+StartupWMClass=stream-all

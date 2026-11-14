@@ -1,0 +1,44 @@
+# Maintainer: David Pietrzak <https://github.com/dtpietrzak>
+
+pkgname=stream-all
+pkgver=0.1.0
+pkgrel=1
+# The repository is omarchy-stream-all; the app and package are stream-all.
+_srcname=omarchy-stream-all
+pkgdesc='Send one OBS stream to YouTube, Twitch, and any other RTMP destination'
+arch=('x86_64' 'aarch64')
+url='https://github.com/dtpietrzak/omarchy-stream-all'
+license=('MIT')
+options=('!debug')
+depends=(
+  'ffmpeg'
+  'hicolor-icon-theme'
+  'libsecret'
+  'qt6-base'
+  'qt6-declarative'
+  'qt6-wayland'
+)
+optdepends=('gnome-keyring: where stream keys are stored encrypted')
+makedepends=('gcc' 'make')
+source=("$pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz")
+sha256sums=('SKIP')
+
+build() {
+  cd "$srcdir/$_srcname-$pkgver"
+  ./bin/build
+}
+
+check() {
+  cd "$srcdir/$_srcname-$pkgver"
+  ./bin/test
+}
+
+package() {
+  cd "$srcdir/$_srcname-$pkgver"
+
+  install -Dm755 build/stream-all "$pkgdir/usr/bin/stream-all"
+  install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+  install -Dm644 pkgbuild/stream-all.svg "$pkgdir/usr/share/icons/hicolor/scalable/apps/stream-all.svg"
+  install -Dm644 pkgbuild/stream-all.desktop "$pkgdir/usr/share/applications/stream-all.desktop"
+  install -Dm644 README.md "$pkgdir/usr/share/doc/$pkgname/README.md"
+}
