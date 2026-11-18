@@ -35,6 +35,49 @@ private slots:
         QCOMPARE(backend.data(backend.index(0), Backend::StatusRole).toString(), QString("empty"));
     }
 
+    void makesUpAnIngestKeyOnceAndKeepsIt()
+    {
+        QTemporaryDir dir;
+        const QString file = dir.filePath("outputs.json");
+        QString first;
+        {
+            Backend backend(file, "/bin/true", secrets(dir));
+            first = backend.ingestKey();
+            QVERIFY(QRegularExpression("^[a-z0-9]{24}$").match(first).hasMatch());
+        }
+        Backend again(file, "/bin/true", secrets(dir));
+        QCOMPARE(again.ingestKey(), first);
+        QVERIFY(Backend::newIngestKey() != Backend::newIngestKey());
+    }
+
+    void rotatingTheIngestKeySavesTheNewOne()
+    {
+        QTemporaryDir dir;
+        const QString file = dir.filePath("outputs.json");
+        QString rotated;
+        {
+            Backend backend(file, "/bin/true", secrets(dir));
+            const QString before = backend.ingestKey();
+            QSignalSpy changed(&backend, &Backend::ingestKeyChanged);
+            backend.rotateIngestKey();
+            rotated = backend.ingestKey();
+            QVERIFY(rotated != before);
+            QCOMPARE(changed.count(), 1);
+        }
+        Backend again(file, "/bin/true", secrets(dir));
+        QCOMPARE(again.ingestKey(), rotated);
+    }
+
+    void replacesAnIngestKeyUnsafeForAUrl()
+    {
+        QTemporaryDir dir;
+        const QString file = dir.filePath("outputs.json");
+        write(file, "{\"ingestKey\": \"a/b?c\", \"outputs\": []}");
+        Backend backend(file, "/bin/true", secrets(dir));
+        QVERIFY(QRegularExpression("^[a-z0-9]{24}$").match(backend.ingestKey()).hasMatch());
+        QVERIFY(readAll(file).contains(backend.ingestKey().toUtf8()));
+    }
+
     void savesAndReloadsOutputsPrivately()
     {
         QTemporaryDir dir;
@@ -253,6 +296,25 @@ private slots:
         Theme theme(dir.path());
         QCOMPARE(theme.accent(), QString("#112233"));
         QCOMPARE(theme.accentForeground(), QString("white"));
+    }
+
+    void themeReadsPalette()
+    {
+        QTemporaryDir dir;
+        QDir(dir.path()).mkpath("theme");
+        write(dir.path() + "/theme/colors.toml",
+              "mode = \"light\"\naccent = \"#112233\"\nbackground = \"#fafafa\"\n"
+              "foreground = \"#202020\"\ndark_foreground = \"#808080\"\nred = \"not a color\"\n");
+
+        Theme theme(dir.path());
+        QVERIFY(!theme.dark());
+        QCOMPARE(theme.base(), QColor("#fafafa"));
+        QCOMPARE(theme.subtext(), QColor("#202020"));
+        QCOMPARE(theme.dim(), QColor("#505050"));
+        // Missing or malformed names keep Stream All's own colors.
+        QCOMPARE(theme.red(), QColor("#f7768e"));
+        QCOMPARE(theme.chrome(), QColor("#141417"));
+        QVERIFY(!theme.colors().contains("red"));
     }
 
     void themeFollowsHyprlandRounding()

@@ -18,7 +18,7 @@ destination, with a plus at the end to add another.
    | OBS field | Value |
    |-----------|-------|
    | Server | `rtmp://localhost:1935/live` |
-   | Stream Key | `stream` |
+   | Stream Key | the key under **Local Server** (press the copy button) |
 
 2. In Stream All, press **+ Add output** (or `Ctrl+N`) and fill in a
    destination: the **server** and the **stream key** your platform gives you.
@@ -26,7 +26,11 @@ destination, with a plus at the end to add another.
    `rtmp://a.rtmp.youtube.com/live2` for YouTube or `rtmp://live.twitch.tv/app`
    for Twitch.
 
-3. Start streaming in OBS. Each output goes from *Waiting* to *Connecting…* to
+3. Press the play button beside the copy buttons (or `Space`) to start the
+   local server. Stream All opens with it off, so it never takes port 1935
+   until you ask.
+
+4. Start streaming in OBS. Each output goes from *Waiting* to *Connecting…* to
    *Live* as it reaches its platform.
 
 ![A fresh Stream All, with empty outputs ready to fill in](screenshots/first-run.png)
@@ -49,9 +53,9 @@ A stream key lets anyone who has it broadcast on your channel, so Stream All
 does not leave them in a file. Each key is stored in the desktop keyring
 (Omarchy's `gnome-keyring`) through `secret-tool`, which keeps it encrypted
 with your login. The config file, `~/.config/stream-all/outputs.json`, holds
-only each output's server and on/off switch.
+each output's server and on/off switch, plus the local ingest key.
 
-- Keys are masked in the window.
+- Keys show as dots in the window; the eye in a field shows that key.
 - Removing an output removes its key from the keyring.
 - If the keyring is locked or missing, the window says so and nothing is
   written to disk in its place.
@@ -62,8 +66,13 @@ only each output's server and on/off switch.
   personal desktop that is rarely a concern, but you should know. ffmpeg has no
   way to take an RTMP key from anywhere else.
 
-The ingest key (`stream`) is the same for everyone and is not a secret; it only
-lets OBS find the local server.
+The ingest key, the one OBS uses, is made up at random the first time Stream
+All opens. The local server listens on every network interface, so this keeps
+other machines on your network from sending to it. The rotate button beside
+it makes a new one, after asking. OBS then needs the new key, and if you are
+live, the stream ends straight away. The ingest key sits in the config file
+(readable only by you) rather than the keyring, since it only guards the local
+server.
 
 ## Shortcuts
 
@@ -72,8 +81,8 @@ lets OBS find the local server.
 | `Space` | Start or stop the local server |
 | `Ctrl+N` | Add an output |
 | `Enter` / `Esc` | Leave a text field, so the keys below work again |
-| `?` | Show the shortcuts |
-| `Q` | Quit (asks first when you are live) |
+| `Ctrl+/`, `F1`, or `?` | Show the shortcuts |
+| `Ctrl+Q` or `Q` | Quit (asks first when you are live) |
 
 Clicking empty space also leaves a text field. Typing letters into a field
 never triggers a shortcut.
@@ -118,8 +127,8 @@ repository, which builds from a tagged GitHub release.
 
 Needs `qt6-base`, `qt6-declarative`, `qt6-wayland`, `ffmpeg`, and `libsecret`
 (plus `gnome-keyring` to hold the keys), which an Omarchy install already
-has. The window follows the Omarchy accent, Hyprland's corner
-rounding, and the language picked under Setup > Language (English, Danish,
+has. The window follows the Omarchy theme's colors (and its light or
+dark mode), Hyprland's corner rounding, and the language picked under Setup > Language (English, Danish,
 German, Spanish, and French so far).
 
 ## License

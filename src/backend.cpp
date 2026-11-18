@@ -7,6 +7,7 @@
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QRandomGenerator>
 #include <QRegularExpression>
 #include <QSaveFile>
 #include <QStandardPaths>
@@ -36,6 +37,12 @@ Backend::Backend(const QString &configFile, const QString &ffmpeg, const QString
       m_ffmpeg(ffmpeg.isEmpty() ? QStandardPaths::findExecutable("ffmpeg") : ffmpeg),
       m_secretTool(secretTool.isEmpty() ? QStandardPaths::findExecutable("secret-tool") : secretTool) {
     load();
+    // The key OBS sends with is made up the first time the app runs, so
+    // nobody else on the network can guess it, and kept from then on.
+    if (m_ingestKey.isEmpty()) {
+        m_ingestKey = newIngestKey();
+        save();
+    }
     if (m_outputs.isEmpty()) {
         Output blank;
         blank.id = QUuid::createUuid().toString(QUuid::WithoutBraces);
@@ -112,7 +119,14 @@ void Backend::load() {
     if (!file.open(QIODevice::ReadOnly))
         return;
     bool migrated = false, rewrite = false;
-    const auto rows = QJsonDocument::fromJson(file.readAll()).object().value("outputs").toArray();
+    const QJsonObject root = QJsonDocument::fromJson(file.readAll()).object();
+    // Only letters, digits, - and _, since it goes into ffmpeg's URL; any
+    // other value is replaced by a fresh key.
+    static const QRegularExpression safeKey("^[A-Za-z0-9_-]{1,64}$");
+    const QString key = root.value("ingestKey").toString();
+    if (safeKey.match(key).hasMatch())
+        m_ingestKey = key;
+    const auto rows = root.value("outputs").toArray();
     for (const auto &value : rows) {
         const QJsonObject object = value.toObject();
         Output o;
@@ -161,7 +175,7 @@ void Backend::save() const {
         qWarning("Could not save %s", qPrintable(m_configFile));
         return;
     }
-    file.write(QJsonDocument(QJsonObject{{"outputs", rows}}).toJson());
+    file.write(QJsonDocument(QJsonObject{{"ingestKey", m_ingestKey}, {"outputs", rows}}).toJson());
     file.setPermissions(QFileDevice::ReadOwner | QFileDevice::WriteOwner);
     file.commit();
 }
@@ -342,6 +356,25 @@ void Backend::setActive(int row, bool active) {
 }
 
 // ---- ingest: OBS to ffmpeg to us ----
+
+QString Backend::newIngestKey() {
+    static const QString alphabet = QStringLiteral("abcdefghijklmnopqrstuvwxyz0123456789");
+    QString key;
+    for (int i = 0; i < 24; ++i)
+        key.append(alphabet.at(QRandomGenerator::system()->bounded(alphabet.size())));
+    return key;
+}
+
+void Backend::rotateIngestKey() {
+    m_ingestKey = newIngestKey();
+    save();
+    emit ingestKeyChanged();
+    // ffmpeg was started with the old key, so it starts again with the new one.
+    if (m_ingest) {
+        stopIngest();
+        startIngest();
+    }
+}
 
 void Backend::setListening(bool on) {
     if (on == m_listening)

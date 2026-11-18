@@ -3,6 +3,12 @@
         <file alias="Main.qml">Main.qml</file>
         <file alias="CopyField.qml">CopyField.qml</file>
         <file alias="OutputRow.qml">OutputRow.qml</file>
+        <file alias="PlainButton.qml">PlainButton.qml</file>
+        <file alias="PlainField.qml">PlainField.qml</file>
+        <file alias="LineIcon.qml">LineIcon.qml</file>
+        <file alias="SectionHeading.qml">SectionHeading.qml</file>
+        <file alias="HelpOverlay.qml">HelpOverlay.qml</file>
+        <file alias="ConfirmOverlay.qml">ConfirmOverlay.qml</file>
         <file alias="i18n/en.json">i18n/en.json</file>
         <file alias="i18n/da.json">i18n/da.json</file>
         <file alias="i18n/de.json">i18n/de.json</file>

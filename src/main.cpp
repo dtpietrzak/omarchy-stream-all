@@ -57,8 +57,9 @@ int main(int argc, char *argv[]) {
     app.installTranslator(&translator);
 
     Theme theme;
+    // The local server waits for the play button, so opening the app never
+    // takes port 1935 or accepts a stream by surprise.
     Backend backend;
-    backend.setListening(true);
 
     QQmlApplicationEngine engine;
     QObject::connect(&translator, &Translator::changed, &engine, &QQmlEngine::retranslate);

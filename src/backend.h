@@ -13,7 +13,7 @@ class Backend : public QAbstractListModel {
     Q_PROPERTY(bool listening READ listening NOTIFY listeningChanged)
     Q_PROPERTY(bool live READ live NOTIFY liveChanged)
     Q_PROPERTY(QString ingestUrl READ ingestUrl CONSTANT)
-    Q_PROPERTY(QString ingestKey READ ingestKey CONSTANT)
+    Q_PROPERTY(QString ingestKey READ ingestKey NOTIFY ingestKeyChanged)
     Q_PROPERTY(QString ingestError READ ingestError NOTIFY ingestErrorChanged)
     Q_PROPERTY(QString keyringError READ keyringError NOTIFY keyringErrorChanged)
 
@@ -31,7 +31,7 @@ public:
     bool listening() const { return m_listening; }
     bool live() const { return m_live; }
     QString ingestUrl() const;
-    QString ingestKey() const { return QStringLiteral("stream"); }
+    QString ingestKey() const { return m_ingestKey; }
     QString ingestError() const { return m_ingestError; }
     QString keyringError() const { return m_keyringError; }
 
@@ -42,6 +42,12 @@ public:
     Q_INVOKABLE void setStreamKey(int row, const QString &key);
     Q_INVOKABLE void setActive(int row, bool active);
     Q_INVOKABLE void copy(const QString &text);
+    // A fresh key for OBS to use. If OBS is sending, that stream ends, since
+    // OBS still has the old key.
+    Q_INVOKABLE void rotateIngestKey();
+
+    // Random letters and digits, safe to put in an RTMP URL.
+    static QString newIngestKey();
 
     static QString platformFor(const QString &server);
     static QString outputUrl(const QString &server, const QString &key);
@@ -53,6 +59,7 @@ signals:
     void listeningChanged();
     void liveChanged();
     void ingestErrorChanged();
+    void ingestKeyChanged();
     void keyringErrorChanged();
 
 private:
@@ -97,7 +104,7 @@ private:
     void onOutputStderr(QProcess *process);
     void onOutputFinished(QProcess *process, int code);
 
-    QString m_configFile, m_ffmpeg, m_secretTool, m_ingestError, m_ingestLog, m_keyringError;
+    QString m_configFile, m_ffmpeg, m_secretTool, m_ingestError, m_ingestLog, m_keyringError, m_ingestKey;
     QList<Output> m_outputs;
     QProcess *m_ingest = nullptr;
     bool m_listening = false, m_live = false;
